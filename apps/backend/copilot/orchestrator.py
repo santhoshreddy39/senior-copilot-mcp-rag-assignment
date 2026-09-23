@@ -67,6 +67,25 @@ class CopilotOrchestrator:
         if asset:
             findings.asset = asset
 
+        # An asset was explicitly named in the question and didn't resolve — stop
+        # here. Running the planners, RAG retrieval, and synthesis anyway just
+        # surfaces an empty/unrelated answer (generic procedure citations, "no
+        # data retrieved" placeholders) under a "no asset found" warning, which
+        # reads as broken rather than as a clean degraded-scenario response.
+        asset_named_but_unresolved = bool(nlu.entities.asset_phrase) and asset is None
+        if asset_named_but_unresolved:
+            return CopilotResponse(
+                query=query,
+                intent=nlu.intent.value,
+                answer=" ".join(warnings) or "No matching asset found for this question.",
+                findings=_findings_to_dict(findings),
+                mcp_trace=[c.to_trace_entry() for c in trace],
+                citations=[],
+                low_confidence_retrieval=False,
+                llm_provider_used="template",
+                warnings=warnings,
+            )
+
         if nlu.intent == Intent.ACTIVE_ALARMS:
             await self._plan_active_alarms(nlu, asset, findings, trace, warnings)
         elif nlu.intent == Intent.RECURRING_INVESTIGATION:
@@ -145,6 +164,11 @@ class CopilotOrchestrator:
         return None
 
     async def _plan_active_alarms(self, nlu, asset, findings: Findings, trace, warnings):
+        if nlu.entities.asset_phrase and not asset:
+            # An asset was explicitly named but didn't resolve — the warning from
+            # _resolve_asset already explains why; don't silently fall back to an
+            # unfiltered, plant-wide alarm list here.
+            return
         args: dict[str, Any] = {"status": "active", "page": 1, "page_size": 50}
         if asset:
             args["asset_id"] = asset["asset_id"]
@@ -230,6 +254,10 @@ class CopilotOrchestrator:
                 findings.recommendations = rec_result.result
 
     async def _plan_highest_priority(self, nlu, asset, findings: Findings, trace, warnings):
+        if nlu.entities.asset_phrase and not asset:
+            # Same reasoning as _plan_active_alarms: an asset was named but didn't
+            # resolve, so don't silently fall back to plant-wide priority scoring.
+            return
         args: dict[str, Any] = {"status": "active", "page": 1, "page_size": 50}
         if asset:
             args["asset_id"] = asset["asset_id"]
