@@ -1,0 +1,60 @@
+services:
+  alarm-api:
+    build: .
+    image: alarm-copilot:latest
+    command: uvicorn apps.backend.simulator.main:app --host 0.0.0.0 --port 8000
+    env_file:
+      - .env
+    environment:
+      ALARM_API_TOKEN: ${ALARM_API_TOKEN:-demo-token}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  copilot-backend:
+    build: .
+    image: alarm-copilot:latest
+    # Rebuild the retrieval index on every start so document corpus edits are always
+    # reflected, then start the API. The MCP server itself is spawned as a stdio
+    # subprocess BY this process on each request session (see
+    # apps/backend/mcp_client/client.py) — this is the standard MCP integration
+    # pattern (the same one Claude Desktop and other MCP hosts use for local
+    # servers), not a shortcut; docs/architecture.md explains the choice, and the
+    # MCP server can also be started completely independently — see
+    # "make mcp-server-standalone" / docs/mcp-tool-catalog.md.
+    command: sh -c "python scripts/ingest_documents.py && uvicorn apps.backend.main:app --host 0.0.0.0 --port 8100"
+    env_file:
+      - .env
+    environment:
+      ALARM_API_BASE_URL: http://alarm-api:8000
+      ALARM_API_TOKEN: ${ALARM_API_TOKEN:-demo-token}
+    ports:
+      - "8100:8100"
+    depends_on:
+      alarm-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  frontend:
+    build: .
+    image: alarm-copilot:latest
+    command: streamlit run apps/frontend/app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true
+    env_file:
+      - .env
+    environment:
+      BACKEND_URL: http://copilot-backend:8100
+    ports:
+      - "8501:8501"
+    depends_on:
+      copilot-backend:
+        condition: service_healthy

@@ -1,0 +1,6 @@
+# Optional: install only the SDK for the LLM provider you configure via LLM_PROVIDER
+# in .env. The system runs fully without any of these (apps/backend/llm/provider.py
+# falls back to the offline TemplateProvider), so these are intentionally NOT in
+# requirements.txt.
+openai>=1.40.0      # LLM_PROVIDER=openai or azure_openai
+anthropic>=0.34.0   # LLM_PROVIDER=anthropic

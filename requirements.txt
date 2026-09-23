@@ -1,0 +1,16 @@
+# Core runtime dependencies for the simulator, MCP server, copilot backend, and GUI.
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+httpx==0.28.1
+pydantic==2.13.5
+pydantic-settings==2.15.0
+python-dotenv==1.2.3
+tenacity==9.1.4
+mcp==1.30.0
+streamlit==1.64.0
+
+# RAG: hybrid lexical retrieval (TF-IDF + BM25), no model download required.
+scikit-learn==1.9.1
+numpy==2.4.6
+rank-bm25==0.2.2
+PyYAML==6.0.3
