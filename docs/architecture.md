@@ -4,46 +4,46 @@
 
 ```
 ┌──────────────────┐
-│  Streamlit GUI    │  apps/frontend/app.py
-│  (chat, trace,    │  - talks ONLY to the copilot backend's HTTP API
-│  citations panel) │
-└─────────┬─────────┘
+│  Streamlit GUI   │  apps/frontend/app.py
+│  (chat, trace,   │  - talks ONLY to the copilot backend's HTTP API
+│  citations panel)│
+└─────────┬────────┘
           │ HTTP (/chat, /mcp/tools, /health)
           ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │  Copilot backend (apps/backend/main.py)                          │
-│  "copilot orchestration layer"                                    │
-│                                                                    │
+│  "copilot orchestration layer"                                   │
+│                                                                  │
 │  ┌────────────┐   ┌──────────────────┐   ┌────────────────────┐  │
-│  │  NLU        │──▶│  Orchestrator     │──▶│  LLM provider       │  │
-│  │  (intent +  │   │  (multi-step MCP  │   │  (pluggable:        │  │
-│  │  entities)  │   │  + RAG planning)  │   │  OpenAI/Anthropic/  │  │
-│  └────────────┘   └─────────┬────────┘   │  Azure/Template)     │  │
-│                              │            └────────────────────┘  │
-│                    ┌─────────┴─────────┐                          │
-│                    ▼                   ▼                          │
-│           ┌────────────────┐  ┌──────────────────┐                │
-│           │  MCP client     │  │  RAG retriever    │                │
-│           │  (stdio)        │  │  (hybrid TF-IDF   │                │
-│           └────────┬────────┘  │   + BM25)         │                │
-│                     │           └─────────┬────────┘                │
-└─────────────────────┼─────────────────────┼─────────────────────┘
-                       │ MCP protocol        │ reads
-                       │ (subprocess, stdio) │
-                       ▼                     ▼
+│  │  NLU       │──▶│  Orchestrator    │──▶│  LLM provider     │  │
+│  │  (intent + │   │  (multi-step MCP │   │  (pluggable:       │  │
+│  │  entities) │   │  + RAG planning) │   │  OpenAI/Anthropic/ │  │
+│  └────────────┘   └─────────┬────────┘   │  Azure/Template)   │  │
+│                             │           └────────────────────┘   │
+│                    ┌────────┴─────────┐                          │
+│                    ▼                  ▼                          │
+│           ┌────────────────┐  ┌──────────────────┐               │
+│           │  MCP client    │  │  RAG retriever   │               │
+│           │  (stdio)       │  │  (hybrid TF-IDF  │               │
+│           └────────┬───────┘  │   + BM25)        │               │
+│                    │          └─────────┬────────┘               │
+└────────────────────┼─────────────────────┼───────────────────────┘
+                     │ MCP protocol        │ reads
+                     │ (subprocess, stdio) │
+                     ▼                     ▼
           ┌─────────────────────┐   ┌──────────────────────┐
-          │  Alarm Management    │   │  rag/documents/*.md   │
-          │  MCP server           │   │  (operating procs,    │
-          │  (mcp-servers/         │   │  maintenance manuals, │
-          │  alarm-management)     │   │  troubleshooting,     │
-          └──────────┬────────────┘   │  safety instructions) │
-                     │ HTTP (Bearer)   └──────────────────────┘
+          │  Alarm Management   │   │  rag/documents/*.md  │
+          │  MCP server         │   │  (operating procs,   │
+          │  (mcp-servers/      │   │  maintenance manuals,│
+          │  alarm-management)  │   │  troubleshooting,    │
+          └──────────┬──────────┘   │  safety instructions)│
+                     │ HTTP (Bearer)└──────────────────────┘
                      │ + trace headers
                      ▼
           ┌─────────────────────┐
-          │  Alarm Management     │
-          │  API simulator          │  apps/backend/simulator/
-          │  (FastAPI)               │  — implements the Postman
+          │  Alarm Management   │
+          │  API simulator      │  apps/backend/simulator/
+          │  (FastAPI)          │  — implements the Postman
           └─────────────────────┘     reference collection contract
 ```
 
