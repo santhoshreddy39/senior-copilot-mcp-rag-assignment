@@ -202,4 +202,5 @@ and the corresponding future-improvements list.
 
 ## Demo video
 
-_Add the link here after recording (see `Submission_and_Evaluation_Guidelines.md` §18 for what to cover)._
+https://drive.google.com/file/d/1s8-AdHIwEMetBIpbPKDJpUXhqKLEBfhm/view?usp=sharing
+
